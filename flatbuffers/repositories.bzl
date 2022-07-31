@@ -11,6 +11,13 @@ load(
     "CC_LANG_SHORTNAME",
 )
 load(
+    "//flatbuffers/toolchain_defs:rs_defs.bzl",
+    "RS_LANG_DEFAULT_RUNTIME",
+    "RS_LANG_FLATC_ARGS",
+    "RS_LANG_REPO",
+    "RS_LANG_SHORTNAME",
+)
+load(
     "//flatbuffers/toolchain_defs:schema_defs.bzl",
     "SCHEMA_LANG_FLATC_ARGS",
     "SCHEMA_LANG_REPO",
@@ -53,5 +60,14 @@ def flatbuffers_cc_toolchain(
         name = CC_LANG_REPO,
         lang_shortname = CC_LANG_SHORTNAME,
         flatc_args = CC_LANG_FLATC_ARGS + extra_flatc_args,
+        runtime = runtime,
+    )
+
+def flatbuffers_rs_toolchain(
+        runtime = RS_LANG_DEFAULT_RUNTIME):
+    flatbuffers_lang_toolchain_gen(
+        name = RS_LANG_REPO,
+        lang_shortname = RS_LANG_SHORTNAME,
+        flatc_args = RS_LANG_FLATC_ARGS,
         runtime = runtime,
     )

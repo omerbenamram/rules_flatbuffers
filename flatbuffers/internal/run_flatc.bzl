@@ -29,6 +29,7 @@ def run_flatc(
         ["-o", output_prefix] + \
         include_args + \
         [src.path for src in srcs]
+
     ctx.actions.run(
         inputs = srcs_transitive,
         outputs = outputs,

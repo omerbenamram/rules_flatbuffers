@@ -1,0 +1,22 @@
+load("@rules_flatbuffers//flatbuffers:flatbuffers_library.bzl", "flatbuffers_library")
+load("@rules_flatbuffers//flatbuffers:cc_flatbuffers_library.bzl", "cc_flatbuffers_library")
+load("@rules_flatbuffers//flatbuffers:rs_flatbuffers_library.bzl", "rs_flatbuffers_library")
+
+flatbuffers_library(
+    name = "viz_fbs",
+    srcs = ["marker.fbs"],
+    visibility = ["//visibility:public"],
+    deps = ["//geom_fbs"],
+)
+
+cc_flatbuffers_library(
+    name = "viz_cc_fbs",
+    visibility = ["//visibility:public"],
+    deps = [":viz_fbs"],
+)
+
+rs_flatbuffers_library(
+    name = "viz_rs_fbs",
+    visibility = ["//visibility:public"],
+    deps = [":viz_fbs"],
+)
