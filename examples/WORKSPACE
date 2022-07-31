@@ -38,3 +38,20 @@ flatbuffers_toolchain()
 flatbuffers_cc_toolchain()
 
 flatbuffers_rs_toolchain()
+
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
+
+crates_repository(
+    name = "crate_index",
+    cargo_lockfile = "//:Cargo.bazel.lock",
+    lockfile = "//:cargo-bazel-lock.json",
+    packages = {
+        "flatbuffers": crate.spec(
+            version = "2",
+        ),
+    },
+)
+
+load("@crate_index//:defs.bzl", "crate_repositories")
+
+crate_repositories()

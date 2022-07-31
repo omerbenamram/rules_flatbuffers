@@ -6,6 +6,7 @@ def _include_args_from_depset(includes_depset):
     for include in includes_depset.to_list():
         include_args.append("-I")
         include_args.append(include)
+
     return include_args
 
 def run_flatc(
@@ -24,11 +25,14 @@ def run_flatc(
         fbs_lang_toolchain.lang_shortname,
         ctx.label,
     )
+
     genrule_args = \
         fbs_lang_toolchain.flatc_args + \
         ["-o", output_prefix] + \
         include_args + \
         [src.path for src in srcs]
+
+    print(" ".join(genrule_args))
 
     ctx.actions.run(
         inputs = srcs_transitive,

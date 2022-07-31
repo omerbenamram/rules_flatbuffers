@@ -38,7 +38,7 @@ def _flatbuffers_rs_info_aspect_impl(target, ctx):
         fbs_lang_toolchain = ctx.attr._fbs_lang_toolchain[FlatbuffersLangToolchainInfo],
         srcs = target[FlatbuffersInfo].srcs,
         srcs_transitive = target[FlatbuffersInfo].srcs_transitive,
-        includes_transitive = target[FlatbuffersInfo].includes_transitive,
+        includes_transitive = depset([dep.dirname for dep in srcs_transitive.to_list()]),
         outputs = srcs,
     )
 
@@ -92,6 +92,9 @@ rs_flatbuffers_genrule = rule(
     implementation = _rs_flatbuffers_genrule_impl,
 )
 
+def _strip_extension(f):
+    return f.basename[:-len(f.extension) - 1]
+
 def _rust_proto_lib_impl(ctx):
     """Generate a lib.rs file for the crates."""
     lib_rs = ctx.actions.declare_file("lib.rs")
@@ -99,22 +102,41 @@ def _rust_proto_lib_impl(ctx):
     content = []
 
     deps = ctx.attr.deps
+    seen = []
 
     for dep in deps:
-        label = dep
         aspect = dep[FlatbuffersCrateInfo]
 
         for src in aspect.srcs:
-            # # TODO: reuse work from aspect
-            # compiled = replace_extension(
-            #     string = file.basename,
-            #     old_extension = file.extension,
-            #     new_extension = RS_FILE_EXTENSION,
-            #     suffix = DEFAULT_SUFFIX,
-            # )
+            modname = _strip_extension(src)
+            if modname in seen:
+                continue
 
-            s = 'include!("%s/%s");' % (label.label.name, src.basename)
+            s = '''
+            pub mod %s {
+                include!("%s");
+            }
+            ''' % (_strip_extension(src), src.basename)
+
+            # s = 'include!("%s/%s");' % (label.label.name, src.basename)
             content.append(s)
+            seen.append(modname)
+
+        # # TODO: files are generated to ("../modname/<>.rs")
+        # for src in aspect.deps.to_list():
+        #     modname = _strip_extension(src)
+
+        #     if modname in seen:
+        #         continue
+        #     s = '''
+        #     pub mod %s {
+        #         include!("../%s");
+        #     }
+        #     ''' % (_strip_extension(src), src.short_path)
+
+        #     # s = 'include!("%s/%s");' % (label.label.name, src.basename)
+        #     content.append(s)
+        #     seen.append(modname)
 
     ctx.actions.write(
         lib_rs,
@@ -137,22 +159,26 @@ rs_flatbuffers_lib = rule(
 )
 
 def rs_flatbuffers_library(name, deps, **kwargs):
-    genrule_name = name + "_genrule"
-    lib_name = name + "_lib"
+    generated_srcs = name + "_genrule"
+    generated_lib = name + "_lib"
 
     rs_flatbuffers_genrule(
-        name = genrule_name,
+        name = generated_srcs,
         deps = deps,
     )
 
     rs_flatbuffers_lib(
-        name = lib_name,
+        name = generated_lib,
         deps = deps,
     )
 
     rust_library(
         name = name,
-        srcs = [lib_name],
+        srcs = [
+            generated_srcs,
+            generated_lib,
+        ],
+        deps = ["@crate_index//:flatbuffers"],
         edition = "2021",
         **kwargs
     )

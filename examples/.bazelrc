@@ -1,0 +1,1 @@
+build --repo_env=BAZEL_LINKOPTS="-fuse-ld=/opt/homebrew/opt/llvm/bin/ld64.lld"
